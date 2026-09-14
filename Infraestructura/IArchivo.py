@@ -10,6 +10,9 @@ class Archivo():
         if not os.path.exists(self.__ruta):
             os.makedirs(self.__ruta)
 
+    def getRuta(self):
+        return self.__ruta
+
     def abrirUnArchivo(self,nombreArchivo, codificacion = "utf-8"):
         rutaCompleta = os.path.join(self.__ruta, nombreArchivo)
 

@@ -1,4 +1,5 @@
 from Servicios import SAutomWeb
+from Servicios import SSsh
 
 url = "https://www.correosdemexico.gob.mx/sslservicios/consultacp/CodigoPostal_Exportar.aspx"
 
@@ -40,5 +41,10 @@ actualPayload = {
 }
 
 automWS = SAutomWeb.AutomWeb()
-automWS.iniciarWS(headers, url, campos, actualPayload)
+rutaDescargado = automWS.iniciarWS(headers, url, campos, actualPayload)
 
+automSsh = SSsh.Ssh()
+automSsh.iniciarCarga(rutaDescargado)
+automSsh.ejecutarBash()
+
+print("Proceso en Python terminado")

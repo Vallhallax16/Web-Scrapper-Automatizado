@@ -1,3 +1,5 @@
+import os.path
+
 from Infraestructura import IArchivo
 from Infraestructura import IDescarga
 
@@ -20,3 +22,5 @@ class AutomWeb:
             print("Descompresion exitosa")
         else:
             print("Hubo un error con el comprimido")
+
+        return archivos.ObtenerUltimoArchivo()

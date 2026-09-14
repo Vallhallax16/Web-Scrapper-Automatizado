@@ -14,3 +14,9 @@ class AutomWeb:
 
         archivos = IArchivo.Archivo()
         archivos.escribirArchivo(self.__nomArch, archDescar, modo = "wb")
+        resultado = archivos.descomprimirArchivo(self.__nomArch)
+
+        if resultado:
+            print("Descompresion exitosa")
+        else:
+            print("Hubo un error con el comprimido")

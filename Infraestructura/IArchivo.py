@@ -1,5 +1,6 @@
 import os
 import re
+import zipfile
 import win32com.client as win32
 
 class Archivo():
@@ -33,6 +34,22 @@ class Archivo():
                            and re.match(patron, archivo)]
 
         return listadoArchivos
+
+    def descomprimirArchivo(self, nombreArchivo):
+        with zipfile.ZipFile(
+                os.path.join(self.__ruta, nombreArchivo),
+                "r"
+        ) as zipArchivo:
+            archivoCorrupto = zipArchivo.testzip()
+
+            if archivoCorrupto:
+                return False
+            else:
+                zipArchivo.extractall(
+                    self.__ruta
+                )
+
+        return True
 
     def ObtenerUltimoArchivo(self):
         listadoArchivos = self.ObtenerRutasArchivos()

@@ -1,5 +1,4 @@
 import os
-
 import paramiko
 
 from Infraestructura import IEntorno
@@ -12,7 +11,7 @@ class Ssh:
         archEnv = IEntorno.Entorno()
 
         self.__host = archEnv.GetEnv("HOST")
-        self.__puerto = archEnv.GetEnv("PUERTO")
+        self.__puerto = int(archEnv.GetEnv("PUERTO"))
         self.__usuario = archEnv.GetEnv("USUARIO")
         self.__contra = archEnv.GetEnv("CONTRASENA")
         self.__dirSAS = archEnv.GetEnv("DIR_SAS")
@@ -31,38 +30,46 @@ class Ssh:
     def ejecutarBash(self):
         self.__conectar()
 
-        stdin, stdout, stderr = self.__cliente.exec_command(
-            self.__bash
-        )
-
-        self.__desconectar()
-
-        codigoSalida = stdout.channel.recv_exit_status()
-
-        salida = stdout.read().decode(
-            "utf-8",
-            errors="replace"
-        )
-
-        error = stderr.read().decode(
-            "utf-8",
-            errors="replace"
-        )
-
-        if codigoSalida != 0:
-            raise RuntimeError(
-                f"El comando remoto terminó con código "
-                f"{codigoSalida}.\n{error}"
+        try:
+            stdin, stdout, stderr = self.__cliente.exec_command(
+                self.__bash
             )
 
-            return False
-        else:
+            codigoSalida = stdout.channel.recv_exit_status()
+
+            salida = stdout.read().decode(
+                "utf-8",
+                errors="replace"
+            )
+
+            error = stderr.read().decode(
+                "utf-8",
+                errors="replace"
+            )
+
+            if codigoSalida != 0:
+                raise RuntimeError(
+                    f"El comando remoto terminó con código "
+                    f"{codigoSalida}.\n\n"
+                    f"STDOUT:\n{salida}\n\n"
+                    f"STDERR:\n{error}"
+                )
+
             return salida
+
+        finally:
+            self.__desconectar()
 
     def __conectar(self):
         self.__cliente = paramiko.SSHClient()
 
-        self.__cliente.load_system_host_keys()
+        rutaKnownHosts = os.path.expanduser(
+            "~/.ssh/known_hosts"
+        )
+
+        self.__cliente.load_host_keys(
+            rutaKnownHosts
+        )
 
         self.__cliente.connect(
             hostname=self.__host,
@@ -82,29 +89,33 @@ class Ssh:
                 f"No existe el archivo local: {rutaLocal}"
             )
         else:
+            arrRuta = rutaLocal.split("\\")
+            rutaRemota = self.__dirSAS + arrRuta[-1]
+
             with self.__cliente.open_sftp() as sftp:
                 sftp.put(
                     rutaLocal,
-                    self.__dirSAS
+                    rutaRemota,
                 )
 
-                resultado = self.__validarCarga(rutaLocal, sftp)
+                resultado = self.__validarCarga(rutaLocal, rutaRemota, sftp)
 
         return resultado
 
-    def __validarCarga(self, rutaLocal, sftp):
+    def __validarCarga(self, rutaLocal, rutaRemota, sftp):
         tamanioLocal = os.path.getsize(
             rutaLocal
         )
 
         tamanioRemoto = sftp.stat(
-            self.__dirSAS
+            rutaRemota
         ).st_size
 
         if tamanioLocal != tamanioRemoto:
             raise IOError(
                 "El tamaño del archivo remoto "
-                "no coincide con el archivo local."
+                "no coincide con el archivo local. "
+                f"Local {tamanioLocal} vs Remoto {tamanioRemoto}"
             )
 
             return False

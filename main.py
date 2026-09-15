@@ -1,5 +1,9 @@
+import os
+
 from Servicios import SAutomWeb
 from Servicios import SSsh
+
+from Infraestructura import IDirectorio
 
 url = "https://www.correosdemexico.gob.mx/sslservicios/consultacp/CodigoPostal_Exportar.aspx"
 
@@ -46,5 +50,10 @@ rutaDescargado = automWS.iniciarWS(headers, url, campos, actualPayload)
 automSsh = SSsh.Ssh()
 automSsh.iniciarCarga(rutaDescargado)
 automSsh.ejecutarBash()
+
+rutaArchivos = os.path.join(os.getcwd(), 'Archivos')
+
+directorios = IDirectorio.Directorio()
+directorios.borrarCarpeta(rutaArchivos)
 
 print("Proceso en Python terminado")
